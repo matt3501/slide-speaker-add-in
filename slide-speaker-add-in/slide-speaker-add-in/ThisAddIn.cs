@@ -1,10 +1,11 @@
-﻿using PowerPoint = Microsoft.Office.Interop.PowerPoint;
+using PowerPoint = Microsoft.Office.Interop.PowerPoint;
 using Microsoft.Office.Interop.PowerPoint;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text;
 
 namespace slide_speaker_add_in
 {
@@ -40,23 +41,51 @@ namespace slide_speaker_add_in
         public async Task PublishTagAsync(string tag)
         {
             var requestUri = "http://W10-D-24.celc.christpewaukee.org:3000/slide";
-            var values = new Dictionary<string, string>
+            //var values = new Dictionary<string, string>
+            //{
+            //    { "tag", tag }
+            //};
+
+            // Serialize our concrete class into a JSON String
+            //var stringPayload = JsonConvert.SerializeObject(values);
+            var stringPayload = "{ \"tag\": \"" + tag +  "\"}";
+
+            // Wrap our JSON inside a StringContent which then can be used by the HttpClient class
+            var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+
+            var httpClient = new HttpClient();
+
+            // Do the actual request and await the response
+            var httpResponse = await httpClient.PostAsync(requestUri, httpContent);
+
+            // If the response contains content we want to read it!
+            if (httpResponse.Content != null)
             {
-                { "tag", tag }
-            };
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
 
-            var content = new FormUrlEncodedContent(values);
-
-            try
-            {
-                var response = await client.PostAsync(requestUri, content);
-
-                _ = await response.Content.ReadAsStringAsync();
+                // From here on you could deserialize the ResponseContent back again to a concrete C# type using Json.Net
             }
-            catch (System.Net.Http.HttpRequestException e)
-            {
-                MessageBox.Show(e.Message);
-            }
+
+
+
+            //var requestUri = "http://W10-D-24.celc.christpewaukee.org:3000/slide";
+            //var values = new Dictionary<string, string>
+            //{
+            //    { "tag", tag }
+            //};
+
+            //var content = new FormUrlEncodedContent(values);
+
+            //try
+            //{
+            //    var response = await client.PostAsync(requestUri, content);
+
+            //    _ = await response.Content.ReadAsStringAsync();
+            //}
+            //catch (System.Net.Http.HttpRequestException e)
+            //{
+            //    MessageBox.Show(e.Message);
+            //}
         }
 
         private string GetTransitionTag(string subjectString)
